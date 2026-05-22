@@ -1,7 +1,16 @@
 import yfinance as yf
+import requests
 from datetime import datetime, timezone
 import pandas as pd
 from typing import List, Dict, Any, Optional
+
+# Set up requests session with a modern browser User-Agent to bypass Yahoo Finance rate-limiting blocks
+session = requests.Session()
+session.headers.update({
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+})
 
 # Static Comprehensive Catalog of Listed and Trending Stocks (33 tickers)
 STOCK_CATALOG = [
@@ -77,7 +86,7 @@ def fetch_stock_history(ticker: str, period: str = "1M") -> List[Dict[str, Any]]
         yf_interval = "1d"
 
     try:
-        stock = yf.Ticker(ticker)
+        stock = yf.Ticker(ticker, session=session)
         df = stock.history(period=yf_period, interval=yf_interval)
         if df.empty:
             return []
@@ -109,7 +118,7 @@ def fetch_latest_price(ticker: str) -> Dict[str, Any]:
     Calculates 24h price change and percentage change.
     """
     try:
-        stock = yf.Ticker(ticker)
+        stock = yf.Ticker(ticker, session=session)
         info = stock.fast_info
         
         price = info.get("last_price")
